@@ -1,1 +1,1 @@
-Solution to [Gophercises](gophercises.com)
+Solution to [Gophercises](gophercises.com) exercises. 
