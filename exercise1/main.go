@@ -5,6 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
+	"time"
 )
 
 type Problem struct {
@@ -33,14 +35,28 @@ func main() {
 	}
 
 	score := 0
+	timer := time.NewTimer(time.Second * 2)
+
+quizloop:
 	for i, problem := range problems {
-		userAnswer := ""
 		fmt.Printf("Problem #%d: %s = ", i+1, problem.question)
-		fmt.Scan(&userAnswer)
-		if userAnswer == problem.answer {
-			score++
+		answerChan := make(chan string)
+		go func() {
+			userAnswer := ""
+			fmt.Scan(&userAnswer)
+			answerChan <- strings.TrimSpace(userAnswer)
+		}()
+
+		select {
+		case ans := <-answerChan:
+			if ans == problem.answer {
+				score++
+			}
+		case <-timer.C:
+			fmt.Println("\nTimes up!")
+			break quizloop
 		}
 
 	}
-	fmt.Printf("You scored %d out of %d.", score, len(problems))
+	fmt.Printf("You scored %d out of %d.\n", score, len(problems))
 }
