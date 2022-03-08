@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"./utils"
 )
 
 type Problem struct {
@@ -15,11 +17,15 @@ type Problem struct {
 
 func main() {
 	filename := flag.String("csv", "problem.csv", "CSV file")
+	totalTime := flag.Int("time", 20, "Total amount of time to solve")
+	flag.Parse()
+
 	file, err := os.Open(*filename)
 
 	if err != nil {
 		errf := fmt.Errorf("could not open file: %v", err)
 		fmt.Println(errf.Error())
+		os.Exit(1)
 	}
 	defer file.Close()
 
@@ -35,7 +41,12 @@ func main() {
 	}
 
 	score := 0
-	timer := time.NewTimer(time.Second * 2)
+	timer := time.NewTimer(time.Second * time.Duration(*totalTime))
+
+	incorrectProblems := []int{}
+
+	fmt.Printf("You have %d seconds to solve %d problems.\n", *totalTime, len(problems))
+	fmt.Println("Begin NOW!!!")
 
 quizloop:
 	for i, problem := range problems {
@@ -51,6 +62,8 @@ quizloop:
 		case ans := <-answerChan:
 			if ans == problem.answer {
 				score++
+			} else {
+				incorrectProblems = append(incorrectProblems, i+1)
 			}
 		case <-timer.C:
 			fmt.Println("\nTimes up!")
@@ -59,4 +72,7 @@ quizloop:
 
 	}
 	fmt.Printf("You scored %d out of %d.\n", score, len(problems))
+	if len(incorrectProblems) > 0 {
+		fmt.Printf("Review the following problems : %s\n", utils.ParseSlice(incorrectProblems))
+	}
 }
